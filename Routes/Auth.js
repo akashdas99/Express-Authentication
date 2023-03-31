@@ -3,7 +3,12 @@ const router = express.Router();
 const createError = require("http-errors");
 const User = require("../Models/User.model");
 const { authSchema } = require("../helpers/validation_schema");
-const { signAccessToken } = require("../helpers/jwt_helper");
+const {
+  signAccessToken,
+  signRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+} = require("../helpers/jwt_helper");
 
 router.post("/register", async (req, res, next) => {
   try {
@@ -16,7 +21,8 @@ router.post("/register", async (req, res, next) => {
     const user = await User.create(result);
 
     const accessToken = await signAccessToken(user.id);
-    res.send({ accessToken });
+    const refreshToken = await signRefreshToken(user.id);
+    res.send({ accessToken, refreshToken });
   } catch (error) {
     if (error.isJoi === true) error.status = 422;
     next(error);
@@ -33,7 +39,8 @@ router.post("/login", async (req, res, next) => {
 
     if (!isMatch) throw createError.Unauthorized("username/password not valid");
     const accessToken = await signAccessToken(user.id);
-    res.send({ accessToken });
+    const refreshToken = await signRefreshToken(user.id);
+    res.send({ accessToken, refreshToken });
   } catch (error) {
     if (error.isJoi === true)
       return next(createError.BadRequest("Invalid Username/Password"));
@@ -41,7 +48,16 @@ router.post("/login", async (req, res, next) => {
   }
 });
 router.post("/refresh-token", async (req, res, next) => {
-  res.send("Refresh route");
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) throw createError.BadRequest();
+    const userId = await verifyRefreshToken(refreshToken);
+    const accessToken = await signAccessToken(userId);
+    const refToken = await signRefreshToken(userId);
+    res.send({ accessToken, refToken });
+  } catch (error) {
+    return next(error);
+  }
 });
 router.delete("/logout", async (req, res, next) => {
   res.send("Logout route");

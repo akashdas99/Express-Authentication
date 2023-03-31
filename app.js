@@ -5,6 +5,7 @@ require("dotenv").config();
 require("./helpers/init_mongodb");
 
 const AuthRoute = require("./Routes/Auth");
+const { verifyAccessToken } = require("./helpers/jwt_helper");
 
 const app = express();
 
@@ -15,7 +16,7 @@ app.use(express.json());
 //for form body
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", async (req, res, next) => {
+app.get("/", verifyAccessToken, async (req, res, next) => {
   res.send("Hello from Express");
 });
 
