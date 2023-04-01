@@ -3,10 +3,10 @@ const morgan = require("morgan");
 const createError = require("http-errors");
 require("dotenv").config();
 require("./helpers/init_mongodb");
+require("./helpers/init-redis");
 
 const AuthRoute = require("./Routes/Auth");
 const { verifyAccessToken } = require("./helpers/jwt_helper");
-
 const app = express();
 
 app.use(morgan("dev"));
